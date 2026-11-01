@@ -137,6 +137,7 @@ pub fn command_names() -> Vec<String> {
 }
 
 pub fn main() -> i32 {
+    crate::platform::leave_launchd_job();
     client::remember_exe();
     let args: Vec<_> = std::env::args_os().skip(1).collect();
     match args.iter().map(|a| a.to_str()).collect::<Vec<_>>().as_slice() {

@@ -13,6 +13,15 @@ pub mod systemd;
 #[cfg(target_os = "macos")]
 mod macos_shutdown;
 
+#[cfg(target_os = "macos")]
+pub mod launchd;
+
+/// First thing in every process: one a launchd job started leaves it (macOS).
+pub fn leave_launchd_job() {
+    #[cfg(target_os = "macos")]
+    launchd::leave_job();
+}
+
 /// Keep the early shutdown watch alive for the core's lifetime.
 pub fn monitor_host_shutdown() -> impl Sized {
     #[cfg(target_os = "macos")]

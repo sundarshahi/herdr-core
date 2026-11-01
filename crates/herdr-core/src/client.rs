@@ -168,8 +168,8 @@ pub fn spawn_core(paths: &Paths) -> Result<(), RpcError> {
     spawn_detached(paths, &["serve"], "core.log").map_err(|e| unavailable(format!("cannot start core: {e}")))
 }
 
-/// Starts `herdr-core <args>` on its own (Linux: as a user service), logging
-/// to the state dir.
+/// Starts `herdr-core <args>` on its own (Linux: as a user service, macOS:
+/// from a launchd job), logging to the state dir.
 pub fn spawn_detached(paths: &Paths, args: &[&str], log: &str) -> std::io::Result<()> {
     paths.create_dirs()?;
     let log = paths.state.join(log);
@@ -180,6 +180,10 @@ pub fn spawn_detached(paths: &Paths, args: &[&str], log: &str) -> std::io::Resul
     cmd.args(args).env_remove(crate::sweep::VAR).env(crate::sweep::RUNTIME, "1");
     #[cfg(target_os = "linux")]
     if let Some(started) = platform::systemd::spawn(&cmd, &log) {
+        return started;
+    }
+    #[cfg(target_os = "macos")]
+    if let Some(started) = platform::launchd::spawn(&cmd, &log) {
         return started;
     }
     let log = std::fs::OpenOptions::new().create(true).append(true).open(log)?;
